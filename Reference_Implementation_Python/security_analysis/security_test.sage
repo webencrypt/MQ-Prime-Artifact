@@ -97,14 +97,22 @@ def compare_structure_vs_random(n, d, p=65537):
     
     sys_struct = [P_A[i] + f_x for i in range(n)] # Structure A + B
     
-    # 2. 构造 Random
+    # 2. 构造 Random (非齐次)
     sys_rand = []
+    # --- 关键修改：生成随机公钥作为目标 ---
+    s_true = vector(GF(p), [randint(0, p-1) for _ in range(n)])
+    
     for _ in range(n):
-        # 随机二次方程
+        # 随机二次多项式
         poly = 0
         for i in range(n):
             for j in range(i, n):
                 poly += randint(0, p-1) * s[i] * s[j]
+        # 添加线性和常数项，使其非齐次，避免秒解
+        for i in range(n):
+            poly += randint(0, p-1) * s[i]
+        poly += randint(0, p-1)
+        
         sys_rand.append(poly)
         
     # --- Attack Structured ---
@@ -123,7 +131,6 @@ def compare_structure_vs_random(n, d, p=65537):
     print(f"Ratio (Struct/Rand): {ratio:.2f}")
 
 # 跑一下 n=10, 12
-compare_structure_vs_random(10, 6)
 compare_structure_vs_random(12, 6)
 
 # --- 主实验循环 ---
